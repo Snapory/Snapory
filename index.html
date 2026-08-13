@@ -1,0 +1,189 @@
+from pathlib import Path
+
+html = r'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snapory - Social Media</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;color:#111}
+button,input,textarea{font:inherit}
+button{cursor:pointer;border:0}
+.app{max-width:1200px;margin:auto;display:grid;grid-template-columns:220px 1fr 280px;min-height:100vh;gap:20px}
+.sidebar{position:sticky;top:0;height:100vh;background:#fff;padding:28px 16px;border-right:1px solid #ddd}
+.logo{font-size:30px;font-weight:800;margin:0 10px 35px;background:linear-gradient(45deg,#7c3aed,#ec4899,#f59e0b);-webkit-background-clip:text;color:transparent}
+.nav button{width:100%;background:transparent;text-align:left;padding:14px 12px;border-radius:12px;font-size:16px;margin:3px 0}
+.nav button:hover,.nav button.active{background:#f0e8ff;font-weight:700}
+.main{padding:20px 0}
+.topbar{display:flex;gap:10px;margin-bottom:18px}
+.search{flex:1;padding:13px 16px;border:1px solid #ddd;border-radius:25px;background:#fff;outline:none}
+.card{background:#fff;border:1px solid #ddd;border-radius:14px;margin-bottom:18px;overflow:hidden}
+.stories{display:flex;gap:16px;padding:16px;overflow:auto}
+.story{text-align:center;min-width:70px}
+.story .avatar{width:62px;height:62px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#f59e0b,#ec4899,#7c3aed);margin:auto}
+.story .avatar span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:#fff;font-size:28px}
+.story small{display:block;margin-top:6px}
+.post-head{display:flex;align-items:center;gap:10px;padding:14px}
+.avatar-sm{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#ddd;font-size:20px}
+.post-head strong{flex:1}
+.post-img{width:100%;height:430px;object-fit:cover;background:#ddd}
+.actions{display:flex;gap:8px;padding:12px 14px}
+.actions button{background:transparent;font-size:24px}
+.actions .like.liked{color:#e11d48}
+.caption{padding:0 14px 8px;line-height:1.5}
+.comments{padding:0 14px 12px;color:#555}
+.comment-box{display:flex;border-top:1px solid #eee;padding:10px}
+.comment-box input{flex:1;border:0;outline:0}
+.comment-box button{background:transparent;color:#7c3aed;font-weight:bold}
+.right{padding:20px 0}
+.profile-card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:18px}
+.profile-top{display:flex;gap:12px;align-items:center;margin-bottom:15px}
+.big-avatar{width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#e9d5ff;font-size:32px}
+.follow-btn{padding:9px 15px;border-radius:9px;background:#7c3aed;color:#fff}
+.stats{display:flex;justify-content:space-between;text-align:center;margin-top:15px}
+.stats b{display:block}
+.section-title{font-size:20px;font-weight:700;padding:16px}
+.reels{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px}
+.reel{height:250px;border-radius:12px;background:linear-gradient(145deg,#111,#7c3aed,#ec4899);color:white;display:flex;align-items:flex-end;padding:12px;font-weight:bold}
+.notification{padding:14px;border-bottom:1px solid #eee}
+.modal{position:fixed;inset:0;background:#0008;display:none;place-items:center;padding:20px;z-index:10}
+.modal.show{display:grid}
+.modal-box{background:#fff;border-radius:16px;padding:22px;width:min(500px,100%)}
+.modal-box h2{margin-bottom:15px}
+.modal-box textarea{width:100%;height:120px;border:1px solid #ddd;border-radius:10px;padding:10px;resize:vertical}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.modal-actions button{padding:10px 15px;border-radius:9px}
+.cancel{background:#eee}.publish{background:#7c3aed;color:#fff}
+.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:25px;display:none;z-index:20}
+@media(max-width:900px){.app{grid-template-columns:75px 1fr}.sidebar{padding:20px 8px}.logo{font-size:20px;margin:0 5px 25px}.nav button{font-size:0;text-align:center}.nav button::first-letter{font-size:22px}.right{display:none}}
+@media(max-width:600px){.app{display:block}.sidebar{height:auto;position:fixed;bottom:0;left:0;right:0;z-index:5;padding:6px;border-top:1px solid #ddd;border-right:0}.logo{display:none}.nav{display:flex;justify-content:space-around}.nav button{width:auto;margin:0;padding:10px}.main{padding:10px 8px 75px}.post-img{height:330px}.topbar{margin-top:5px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">Snapory</div>
+  <nav class="nav">
+    <button class="active" onclick="showHome()">🏠 Home</button>
+    <button onclick="showSearch()">🔍 Search</button>
+    <button onclick="openCreate()">➕ Create</button>
+    <button onclick="showReels()">🎬 Reels</button>
+    <button onclick="showNotifications()">🔔 Notifications</button>
+    <button onclick="showMessages()">💬 Messages</button>
+    <button onclick="showProfile()">👤 Profile</button>
+  </nav>
+</aside>
+
+<main class="main" id="main">
+  <div class="topbar">
+    <input id="searchInput" class="search" placeholder="Search Snapory..." oninput="searchUsers(this.value)">
+  </div>
+
+  <div class="card">
+    <div class="section-title">Stories ⭕</div>
+    <div class="stories">
+      <div class="story" onclick="toast('Your story')"><div class="avatar"><span>➕</span></div><small>Your story</small></div>
+      <div class="story"><div class="avatar"><span>👩</span></div><small>Priya</small></div>
+      <div class="story"><div class="avatar"><span>👨</span></div><small>Rahul</small></div>
+      <div class="story"><div class="avatar"><span>👩‍💻</span></div><small>Anita</small></div>
+      <div class="story"><div class="avatar"><span>🧑</span></div><small>Amit</small></div>
+    </div>
+  </div>
+
+  <div id="feed">
+    <article class="card post">
+      <div class="post-head"><div class="avatar-sm">👨</div><strong>rahul_snap</strong><span>•••</span></div>
+      <img class="post-img" src="https://picsum.photos/900/700?random=11" alt="Post">
+      <div class="actions">
+        <button class="like" onclick="likePost(this)">♡</button>
+        <button onclick="commentFocus(this)">💬</button>
+        <button onclick="sharePost()">↗️</button>
+      </div>
+      <div class="caption"><b>rahul_snap</b> Beautiful day! 🌄 #snapory #nature</div>
+      <div class="comments" data-count="24">View 24 comments</div>
+      <div class="comment-box"><input placeholder="Add a comment..."><button onclick="addComment(this)">Post</button></div>
+    </article>
+
+    <article class="card post">
+      <div class="post-head"><div class="avatar-sm">👩</div><strong>priya_world</strong><span>•••</span></div>
+      <img class="post-img" src="https://picsum.photos/900/700?random=22" alt="Post">
+      <div class="actions">
+        <button class="like" onclick="likePost(this)">♡</button>
+        <button onclick="commentFocus(this)">💬</button>
+        <button onclick="sharePost()">↗️</button>
+      </div>
+      <div class="caption"><b>priya_world</b> Exploring new places ✨</div>
+      <div class="comments" data-count="18">View 18 comments</div>
+      <div class="comment-box"><input placeholder="Add a comment..."><button onclick="addComment(this)">Post</button></div>
+    </article>
+  </div>
+</main>
+
+<aside class="right">
+  <div class="profile-card">
+    <div class="profile-top">
+      <div class="big-avatar">👤</div>
+      <div><b>ompr</b><br><small>Welcome to Snapory</small></div>
+    </div>
+    <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
+    <div class="stats"><div><b>12</b><small>Posts</small></div><div><b>245</b><small>Followers</small></div><div><b>180</b><small>Following</small></div></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="section-title">🔔 Notifications</div>
+    <div class="notification">❤️ Rahul liked your post</div>
+    <div class="notification">➕ Priya started following you</div>
+    <div class="notification">💬 Amit commented on your post</div>
+  </div>
+</aside>
+</div>
+
+<div class="modal" id="createModal">
+  <div class="modal-box">
+    <h2>➕ Create Post</h2>
+    <textarea id="captionInput" placeholder="Write a caption..."></textarea>
+    <div class="modal-actions"><button class="cancel" onclick="closeCreate()">Cancel</button><button class="publish" onclick="publishPost()">Publish</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
+  clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.style.display='none',1800);
+}
+function likePost(btn){btn.classList.toggle('liked');btn.textContent=btn.classList.contains('liked')?'♥':'♡';toast(btn.classList.contains('liked')?'Post liked ❤️':'Like removed');}
+function commentFocus(btn){const box=btn.closest('.post').querySelector('.comment-box input');box.focus();}
+function addComment(btn){
+  const input=btn.previousElementSibling;
+  if(!input.value.trim()){toast('Comment लिखें');return}
+  const c=btn.closest('.post').querySelector('.comments');let n=Number(c.dataset.count)+1;c.dataset.count=n;c.textContent='View '+n+' comments';
+  input.value='';toast('Comment posted 💬');
+}
+function sharePost(){navigator.clipboard?.writeText(location.href);toast('Post link copied ↗️');}
+function toggleFollow(btn){btn.textContent=btn.textContent==='Follow'?'Following':'Follow';toast(btn.textContent==='Following'?'Following user ➕':'Unfollowed');}
+function openCreate(){document.getElementById('createModal').classList.add('show');}
+function closeCreate(){document.getElementById('createModal').classList.remove('show');}
+function publishPost(){
+  const cap=document.getElementById('captionInput').value.trim()||'My new Snapory post ✨';
+  const post=document.createElement('article');post.className='card post';
+  post.innerHTML=`<div class="post-head"><div class="avatar-sm">👤</div><strong>ompr</strong><span>•••</span></div>
+  <img class="post-img" src="https://picsum.photos/900/700?random=${Math.floor(Math.random()*1000)}" alt="New post">
+  <div class="actions"><button class="like" onclick="likePost(this)">♡</button><button onclick="commentFocus(this)">💬</button><button onclick="sharePost()">↗️</button></div>
+  <div class="caption"><b>ompr</b> ${escapeHtml(cap)}</div><div class="comments" data-count="0">View 0 comments</div>
+  <div class="comment-box"><input placeholder="Add a comment..."><button onclick="addComment(this)">Post</button></div>`;
+  document.getElementById('feed').prepend(post);document.getElementById('captionInput').value='';closeCreate();toast('Post published 🎉');
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function showHome(){location.reload();}
+function showSearch(){document.getElementById('searchInput').focus();toast('Search users and posts 🔍');}
+function searchUsers(q){if(q.trim())toast('Searching: '+q);}
+function showReels(){document.getElementById('main').innerHTML=`<div class="card"><div class="section-title">🎬 Reels</div><div class="reels"><div class="reel">🎵 Trending Reel</div><div class="reel">🔥 Popular Reel</div><div class="reel">😂 Funny Reel</div><div class="reel">🌄 Travel Reel</div></div></div>`;}
+function showNotifications(){document.getElementById('main').innerHTML=`<div class="card"><div class="section-title">🔔 Notifications</div><div class="notification">❤️ Rahul liked your post</div><div class="notification">➕ Priya started following you</div><div class="notification">💬 Amit commented on your post</div></div>`;}
+function showMessages(){document.getElementById('main').innerHTML=`<div class="card"><div class="section-title">💬 Messages</div><div class="notification"><b>Rahul</b><br>Hey! Welcome to Snapory 👋</div><div class="notification"><b>Priya</b><br>Nice post! ❤️</div><div style="padding:14px"><input class="search" placeholder="Write a message..." style="width:100%"></div></div>`;}
+function showProfile(){document.getElementById('main').innerHTML=`<div class="profile-card"><div class="profile-top"><div class="big-avatar">👤</div><div><h2>ompr</h2><small>My Snapory Profile</small></div></div><p>Sharing photos, videos and moments ✨</p><div class="stats"><div><b>12</b><small>Posts</small></div><div><b>245</b><small>Followers</small></div><div><b>180</b><small>Following</small></div></div></div>`;}
+</script>
+</body>
+</html>'''
+
